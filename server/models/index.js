@@ -11,6 +11,7 @@ const Group = require('./group');
 const GroupMember = require('./groupMember');
 const GroupMessage = require('./groupMessage');
 const GroupMessageRead = require('./groupMessageRead');
+const GroupRequest = require('./groupRequest');
 
 // 用户与题库关联
 User.hasMany(QuestionBank, {
@@ -190,6 +191,31 @@ GroupMessageRead.belongsTo(User, {
   as: 'user'
 });
 
+// 群组申请关联
+GroupRequest.belongsTo(Group, {
+  foreignKey: 'group_id',
+  as: 'group',
+  onDelete: 'CASCADE'
+});
+
+GroupRequest.belongsTo(User, {
+  foreignKey: 'user_id',
+  as: 'user',
+  onDelete: 'CASCADE'
+});
+
+Group.hasMany(GroupRequest, {
+  foreignKey: 'group_id',
+  as: 'requests',
+  onDelete: 'CASCADE'
+});
+
+User.hasMany(GroupRequest, {
+  foreignKey: 'user_id',
+  as: 'groupRequests',
+  onDelete: 'CASCADE'
+});
+
 module.exports = {
   User,
   QuestionBank,
@@ -203,5 +229,6 @@ module.exports = {
   Group,
   GroupMember,
   GroupMessage,
-  GroupMessageRead
+  GroupMessageRead,
+  GroupRequest
 }; 

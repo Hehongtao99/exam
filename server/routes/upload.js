@@ -98,12 +98,10 @@ router.post('/merge', async (req, res) => {
   }
 });
 
-// 上传文件
-router.post('/', upload.single('file'), async (req, res) => {
-  console.log('收到上传请求:', req.file ? '有文件' : '无文件');
+// 上传图片
+router.post('/image', upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
-      console.log('没有接收到文件');
       return res.status(400).json({
         success: false,
         message: '没有接收到文件'
@@ -111,36 +109,65 @@ router.post('/', upload.single('file'), async (req, res) => {
     }
 
     const file = req.file;
-    console.log('文件信息:', {
-      originalname: file.originalname,
-      mimetype: file.mimetype,
-      size: file.size
-    });
+    if (!file.mimetype.startsWith('image/')) {
+      return res.status(400).json({
+        success: false,
+        message: '只能上传图片文件'
+      });
+    }
 
     const fileExt = path.extname(file.originalname);
-    const fileName = `${Date.now()}${fileExt}`;
-    const fileType = file.mimetype.startsWith('image/') ? 'image' : 'file';
-    const filePath = `${fileType}s/${fileName}`;
-
-    console.log('准备上传到MinIO:', {
-      bucket,
-      filePath
-    });
+    const fileName = `images/${Date.now()}${fileExt}`;
 
     // 上传到MinIO
-    await minioClient.putObject(bucket, filePath, file.buffer);
-    console.log('MinIO上传成功');
+    await minioClient.putObject(bucket, fileName, file.buffer);
 
     // 生成访问URL
-    const fileUrl = `http://113.45.161.48:9000/${bucket}/${filePath}`;
-
-    console.log('生成的文件URL:', fileUrl);
+    const fileUrl = `http://113.45.161.48:9000/${bucket}/${fileName}`;
 
     res.json({
       success: true,
       data: {
         url: fileUrl,
-        type: fileType,
+        type: 'image',
+        name: file.originalname,
+        size: file.size
+      }
+    });
+  } catch (error) {
+    console.error('上传图片失败:', error);
+    res.status(500).json({
+      success: false,
+      message: '上传图片失败'
+    });
+  }
+});
+
+// 上传文件
+router.post('/file', upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: '没有接收到文件'
+      });
+    }
+
+    const file = req.file;
+    const fileExt = path.extname(file.originalname);
+    const fileName = `files/${Date.now()}${fileExt}`;
+
+    // 上传到MinIO
+    await minioClient.putObject(bucket, fileName, file.buffer);
+
+    // 生成访问URL
+    const fileUrl = `http://113.45.161.48:9000/${bucket}/${fileName}`;
+
+    res.json({
+      success: true,
+      data: {
+        url: fileUrl,
+        type: 'file',
         name: file.originalname,
         size: file.size
       }
@@ -149,7 +176,7 @@ router.post('/', upload.single('file'), async (req, res) => {
     console.error('上传文件失败:', error);
     res.status(500).json({
       success: false,
-      message: '上传文件失败: ' + error.message
+      message: '上传文件失败'
     });
   }
 });

@@ -24,6 +24,12 @@ const QuestionBank = sequelize.define('QuestionBank', {
     allowNull: false,
     comment: '创建者ID'
   },
+  is_public: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+    comment: '是否公开'
+  },
   create_time: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW,

@@ -22,7 +22,7 @@ axios.defaults.baseURL = 'http://localhost:3000'
 // 添加请求拦截器
 axios.interceptors.request.use(config => {
   if (userStore.id) {
-    config.headers['X-User-Id'] = userStore.id
+    config.headers['x-user-id'] = userStore.id
   }
   return config
 })

@@ -26,11 +26,22 @@ const GroupMember = sequelize.define('GroupMember', {
     type: DataTypes.ENUM('owner', 'admin', 'member'),
     allowNull: false,
     defaultValue: 'member',
-    comment: '成员角色'
+    comment: '成员角色: owner-群主, admin-管理员, member-普通成员'
+  },
+  mute_end_time: {
+    type: DataTypes.DATE,
+    allowNull: true,
+    comment: '禁言结束时间'
   },
   join_time: {
     type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW
+    defaultValue: DataTypes.NOW,
+    comment: '加入时间'
+  },
+  last_read_time: {
+    type: DataTypes.DATE,
+    defaultValue: DataTypes.NOW,
+    comment: '最后阅读时间'
   }
 }, {
   tableName: 'group_members',

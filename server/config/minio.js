@@ -16,20 +16,22 @@ const ensureBucket = async () => {
     const exists = await minioClient.bucketExists(bucket);
     if (!exists) {
       await minioClient.makeBucket(bucket);
-      // 设置bucket策略为公开读
-      const policy = {
-        Version: '2012-10-17',
-        Statement: [
-          {
-            Effect: 'Allow',
-            Principal: { AWS: ['*'] },
-            Action: ['s3:GetObject'],
-            Resource: [`arn:aws:s3:::${bucket}/*`]
-          }
-        ]
-      };
-      await minioClient.setBucketPolicy(bucket, JSON.stringify(policy));
     }
+    
+    // 设置bucket策略为公开读
+    const policy = {
+      Version: '2012-10-17',
+      Statement: [
+        {
+          Effect: 'Allow',
+          Principal: { AWS: ['*'] },
+          Action: ['s3:GetObject', 's3:PutObject'],
+          Resource: [`arn:aws:s3:::${bucket}/*`]
+        }
+      ]
+    };
+    
+    await minioClient.setBucketPolicy(bucket, JSON.stringify(policy));
     console.log('MinIO bucket 已就绪:', bucket);
   } catch (error) {
     console.error('MinIO bucket初始化失败:', error);

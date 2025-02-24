@@ -6,6 +6,7 @@ const { Op } = require('sequelize');
 const GroupMember = require('./models/groupMember');
 const GroupMessage = require('./models/groupMessage');
 const GroupMessageRead = require('./models/groupMessageRead');
+const Group = require('./models/group');
 
 // 存储在线用户的WebSocket连接
 const clients = new Map();
@@ -207,6 +208,60 @@ async function sendGroupMessage(groupId, message) {
   }
 }
 
+// 发送群组申请通知
+async function sendGroupRequestNotification(groupId, requestUser) {
+  try {
+    // 获取群组信息和管理员列表
+    const group = await Group.findOne({
+      where: { id: groupId },
+      include: [{
+        model: GroupMember,
+        as: 'members',
+        where: {
+          role: {
+            [Op.in]: ['owner', 'admin']
+          }
+        },
+        attributes: ['user_id']
+      }]
+    });
+
+    if (!group) return;
+
+    // 获取所有需要通知的用户ID（群主和管理员）
+    const notifyUserIds = group.members.map(member => member.user_id);
+
+    // 构建通知消息
+    const notification = {
+      type: 'group_request',
+      data: {
+        requestId: requestUser.requestId,
+        groupId: group.id,
+        groupName: group.name,
+        user: {
+          id: requestUser.id,
+          username: requestUser.username,
+          nickname: requestUser.nickname,
+          avatar: requestUser.avatar
+        },
+        createTime: new Date()
+      }
+    };
+
+    // 向所有在线的群管理员发送通知
+    notifyUserIds.forEach(userId => {
+      const userSocket = clients.get(userId);
+      if (userSocket) {
+        userSocket.send(JSON.stringify(notification));
+      }
+    });
+
+    console.log('群组申请通知已发送给管理员:', notifyUserIds);
+  } catch (error) {
+    console.error('发送群组申请通知失败:', error);
+  }
+}
+
 function initWebSocket(server) {
   const wss = new WebSocket.Server({ server });
 
@@ -352,6 +407,27 @@ function initWebSocket(server) {
                 }));
               }
             }
+
+            // 处理群组申请状态更新
+            if (message.type === 'group_request_status') {
+              if (message.requestId && message.status) {
+                const notification = {
+                  type: 'group_request_update',
+                  data: {
+                    requestId: message.requestId,
+                    status: message.status,
+                    groupId: message.groupId,
+                    updateTime: new Date()
+                  }
+                };
+                
+                // 通知申请人
+                const applicantSocket = clients.get(message.userId);
+                if (applicantSocket) {
+                  applicantSocket.send(JSON.stringify(notification));
+                }
+              }
+            }
           } catch (error) {
             console.error('处理WebSocket消息失败:', error);
             ws.send(JSON.stringify({
@@ -451,9 +527,31 @@ function sendFriendshipUpdateNotification(userId1, userId2, action) {
   }
 }
 
+async function handleMessageFailed(messageId) {
+  try {
+    // 通知发送者消息发送失败
+    const failedMessage = {
+      type: 'message_failed',
+      messageId: messageId
+    };
+    
+    // 查找消息发送者的连接并发送失败通知
+    const senderConnection = Array.from(clients.values())
+      .find(client => client.messages?.has(messageId));
+    
+    if (senderConnection?.ws.readyState === WebSocket.OPEN) {
+      senderConnection.ws.send(JSON.stringify(failedMessage));
+    }
+  } catch (error) {
+    console.error('处理消息失败通知错误:', error);
+  }
+}
+
 module.exports = {
   initWebSocket,
   sendFriendRequestNotification,
   sendFriendshipUpdateNotification,
-  sendGroupMessage
+  sendGroupMessage,
+  sendGroupRequestNotification,
+  clients
 }; 

@@ -252,11 +252,9 @@ const handleModalOk = async () => {
       return
     }
 
-    const userId = 1 // 这里应该从登录状态中获取
     const data = {
       name: formData.value.name,
-      description: formData.value.description,
-      userId
+      description: formData.value.description
     }
 
     let res
