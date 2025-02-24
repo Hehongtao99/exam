@@ -7,6 +7,10 @@ const MistakeBook = require('./mistakeBook');
 const MistakeRecord = require('./mistakeRecord');
 const Friend = require('./friend');
 const Message = require('./message');
+const Group = require('./group');
+const GroupMember = require('./groupMember');
+const GroupMessage = require('./groupMessage');
+const GroupMessageRead = require('./groupMessageRead');
 
 // 用户与题库关联
 User.hasMany(QuestionBank, {
@@ -85,17 +89,6 @@ MistakeBook.belongsTo(User, {
   as: 'user'
 });
 
-// 错题本与错题记录关联
-MistakeBook.hasMany(MistakeRecord, {
-  foreignKey: 'bookId',
-  as: 'mistakeRecords'
-});
-
-MistakeRecord.belongsTo(MistakeBook, {
-  foreignKey: 'bookId',
-  as: 'book'
-});
-
 // 题目与错题记录关联
 Question.hasMany(MistakeRecord, {
   foreignKey: 'questionId',
@@ -105,6 +98,17 @@ Question.hasMany(MistakeRecord, {
 MistakeRecord.belongsTo(Question, {
   foreignKey: 'questionId',
   as: 'question'
+});
+
+// 错题本与错题记录关联
+MistakeBook.hasMany(MistakeRecord, {
+  foreignKey: 'bookId',
+  as: 'mistakeRecords'
+});
+
+MistakeRecord.belongsTo(MistakeBook, {
+  foreignKey: 'bookId',
+  as: 'mistakeBook'
 });
 
 // 好友关系关联
@@ -135,6 +139,57 @@ Message.belongsTo(User, {
   as: 'toUser'
 });
 
+// 群组关联
+Group.belongsTo(User, {
+  foreignKey: 'owner_id',
+  as: 'owner'
+});
+
+Group.hasMany(GroupMember, {
+  foreignKey: 'group_id',
+  as: 'members'
+});
+
+GroupMember.belongsTo(Group, {
+  foreignKey: 'group_id',
+  as: 'group'
+});
+
+GroupMember.belongsTo(User, {
+  foreignKey: 'user_id',
+  as: 'user'
+});
+
+Group.hasMany(GroupMessage, {
+  foreignKey: 'group_id',
+  as: 'messages'
+});
+
+GroupMessage.belongsTo(Group, {
+  foreignKey: 'group_id',
+  as: 'group'
+});
+
+GroupMessage.belongsTo(User, {
+  foreignKey: 'from_user_id',
+  as: 'fromUser'
+});
+
+GroupMessage.hasMany(GroupMessageRead, {
+  foreignKey: 'message_id',
+  as: 'readRecords'
+});
+
+GroupMessageRead.belongsTo(GroupMessage, {
+  foreignKey: 'message_id',
+  as: 'message'
+});
+
+GroupMessageRead.belongsTo(User, {
+  foreignKey: 'user_id',
+  as: 'user'
+});
+
 module.exports = {
   User,
   QuestionBank,
@@ -144,5 +199,9 @@ module.exports = {
   MistakeBook,
   MistakeRecord,
   Friend,
-  Message
+  Message,
+  Group,
+  GroupMember,
+  GroupMessage,
+  GroupMessageRead
 }; 

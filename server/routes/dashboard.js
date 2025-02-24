@@ -36,7 +36,7 @@ router.get('/stats', async (req, res) => {
       MistakeRecord.count({
         include: [{
           model: MistakeBook,
-          as: 'book',
+          as: 'mistakeBook',
           where: { userId: parseInt(userId) }
         }]
       })
@@ -75,7 +75,7 @@ router.get('/recent-exams', async (req, res) => {
       where: { userId: parseInt(userId) },
       include: [{
         model: QuestionBank,
-        as: 'examBank',
+        as: 'questionBank',
         attributes: ['name']
       }],
       order: [['create_time', 'DESC']],
@@ -113,7 +113,7 @@ router.get('/mistake-stats', async (req, res) => {
         as: 'mistakeRecords',
         include: [{
           model: Question,
-          as: 'question',
+          as: 'mistakeQuestion',
           attributes: ['type']
         }]
       }]
@@ -129,8 +129,8 @@ router.get('/mistake-stats', async (req, res) => {
 
     mistakes.forEach(book => {
       book.mistakeRecords?.forEach(record => {
-        if (record.question?.type) {
-          stats[record.question.type]++;
+        if (record.mistakeQuestion?.type) {
+          stats[record.mistakeQuestion.type]++;
         }
       });
     });

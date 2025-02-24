@@ -5,80 +5,49 @@
       <a-col :span="6" class="friend-list">
         <a-tabs default-active-key="1" class="chat-tabs">
           <a-tab-pane key="1" tab="好友">
-        <div class="friend-header">
-          <a-input-search
-            v-model:value="searchText"
-            placeholder="搜索用户"
-            @search="handleSearch"
-          />
-        </div>
-        
-        <!-- 好友请求提醒 -->
-        <div v-if="friendRequests.length > 0" class="friend-requests" @click="showRequestsModal">
-          <a-alert
-            type="info"
-            :message="`您有 ${friendRequests.length} 个新的好友请求`"
-            banner
-          />
-        </div>
-
-        <!-- 好友列表 -->
-          <div class="friend-scroll">
-          <div
-            v-for="friend in friends"
-            :key="friend.id"
-            class="friend-item"
-            :class="{ active: currentFriend?.id === friend.id, deleted: friend.isDeleted }"
-            @click="selectFriend(friend)"
-          >
-            <a-badge :count="friend.unreadCount || 0">
-              <a-avatar
-                :size="40"
-                :src="friend.avatar"
-              >
-                {{ friend.nickname?.[0] || friend.username?.[0] }}
-              </a-avatar>
-            </a-badge>
-            <div class="friend-info">
-              <div class="friend-name">
-                {{ friend.nickname || friend.username }}
-                <span v-if="friend.unreadCount" class="unread-count">
-                  {{ friend.unreadCount }}
-                </span>
-              </div>
-              <div class="friend-status" :class="{ online: friend.online }">
-                {{ friend.online ? '在线' : '离线' }}
-              </div>
+            <div class="friend-header">
+              <a-input-search
+                v-model:value="searchText"
+                placeholder="搜索用户"
+                @search="handleSearch"
+              />
             </div>
-          </div>
-        </div>
-          </a-tab-pane>
-          <a-tab-pane key="2" tab="群组">
-            <div class="group-scroll">
-              <div class="group-create">
-                <a-button type="primary" block @click="showCreateGroupModal">
-                  创建群组
-                </a-button>
-              </div>
-              <div 
-                v-for="group in groups" 
-                :key="group.id"
-                class="group-item"
-                :class="{ active: currentGroup?.id === group.id }"
-                @click="selectGroup(group)"
+            
+            <!-- 好友请求提醒 -->
+            <div v-if="friendRequests.length > 0" class="friend-requests" @click="showRequestsModal">
+              <a-alert
+                type="info"
+                :message="`您有 ${friendRequests.length} 个新的好友请求`"
+                banner
+              />
+            </div>
+
+            <!-- 好友列表 -->
+            <div class="friend-scroll">
+              <div
+                v-for="friend in friends"
+                :key="friend.id"
+                class="friend-item"
+                :class="{ active: currentFriend?.id === friend.id, deleted: friend.isDeleted }"
+                @click="selectFriend(friend)"
               >
-                <a-avatar :size="40" :src="group.avatar">
-                  {{ group.name[0] }}
-                </a-avatar>
-                <div class="group-info">
-                  <div class="group-name">
-                    {{ group.name }}
-                    <span v-if="group.unreadCount" class="unread-count">
-                      {{ group.unreadCount }}
+                <a-badge :count="friend.unreadCount || 0">
+                  <a-avatar
+                    :size="40"
+                    :src="friend.avatar"
+                  >
+                    {{ friend.nickname?.[0] || friend.username?.[0] }}
+                  </a-avatar>
+                </a-badge>
+                <div class="friend-info">
+                  <div class="friend-name">
+                    {{ friend.nickname || friend.username }}
+                    <span v-if="friend.unreadCount" class="unread-count">
+                      {{ friend.unreadCount }}
                     </span>
                   </div>
-                  <div class="group-members">
-                    成员: {{ group.memberCount }}
+                  <div class="friend-status" :class="{ online: friend.online }">
+                    {{ friend.online ? '在线' : '离线' }}
                   </div>
                 </div>
               </div>
@@ -89,35 +58,23 @@
 
       <!-- 右侧聊天区域 -->
       <a-col :span="18" class="chat-main">
-        <template v-if="currentFriend || currentGroup">
+        <template v-if="currentFriend">
           <div class="chat-header">
-            <span v-if="currentFriend">
+            <span>
               {{ currentFriend.nickname || currentFriend.username }}
-            </span>
-            <span v-if="currentGroup">
-              {{ currentGroup.name }} ({{ currentGroup.memberCount }}人)
             </span>
           </div>
           
           <div class="chat-messages" ref="messageContainer">
             <div v-for="msg in messages" :key="msg.id" class="message-item">
-              <div v-if="msg.groupId" class="message-sender">
-                {{ msg.fromUser.nickname || msg.fromUser.username }}
-              </div>
               <div class="message-content" :class="{ 
-                'message-self': msg.fromUserId === userStore.id,
-                'group-message': msg.groupId
+                'message-self': msg.fromUserId === userStore.id
               }">
                 <a-avatar
                   :size="36"
                   :src="msg.fromUserId === userStore.id ? userStore.avatar : currentFriend.avatar"
                 >
-                  <span v-if="!msg.groupId">
-                    {{ msg.fromUserId === userStore.id ? userStore.username[0] : currentFriend?.username[0] }}
-                  </span>
-                  <span v-else>
-                    {{ msg.fromUser.nickname?.[0] || msg.fromUser.username[0] }}
-                  </span>
+                  {{ msg.fromUserId === userStore.id ? userStore.username[0] : currentFriend?.username[0] }}
                 </a-avatar>
                 <div class="message-bubble" :class="{ 'image-message': msg.type === 'image' }">
                   <template v-if="msg.type === 'text'">
@@ -174,11 +131,10 @@
           </div>
 
           <div class="chat-input">
-          <MessageInput 
-            @send="handleSend" 
-            :disabled="(!currentFriend && !currentGroup) || (currentFriend?.isDeleted)"
-            :is-group="!!currentGroup"
-          />
+            <MessageInput 
+              @send="handleSend" 
+              :disabled="currentFriend?.isDeleted"
+            />
           </div>
         </template>
         
@@ -297,12 +253,8 @@ const userAvatar = computed(() => userStore.avatar)
 
 const ws = ref(null)
 const friends = ref([])
-const groups = ref([])
 const currentFriend = ref(null)
-const currentGroup = ref(null)
 const messages = ref([])
-const createGroupModalVisible = ref(false)
-const newGroupName = ref('')
 const inputMessage = ref('')
 const friendRequests = ref([])
 const searchText = ref('')
@@ -318,68 +270,6 @@ const selectedFriend = ref(null)
 // 图片预览
 const previewVisible = ref(false);
 const previewImage = ref('');
-
-// 群组相关方法
-const fetchGroups = async () => {
-  try {
-    const response = await axios.get('/api/group/list')
-    if (response.data.success) {
-      groups.value = response.data.data.map(group => ({
-        ...group,
-        unreadCount: 0
-      }))
-    }
-  } catch (error) {
-    message.error('获取群组列表失败')
-  }
-}
-
-const selectGroup = async (group) => {
-  currentGroup.value = group
-  currentFriend.value = null
-  messages.value = []
-  
-  try {
-    const response = await axios.get(`/api/group_messages/history/${group.id}`)
-    if (response.data.success) {
-      messages.value = response.data.data
-    }
-    
-    if (group.unreadCount > 0) {
-      await axios.put(`/api/group_messages/read/${group.id}`)
-      group.unreadCount = 0
-    }
-    
-    scrollToBottom()
-  } catch (error) {
-    message.error('获取群聊记录失败')
-  }
-}
-
-const showCreateGroupModal = () => {
-  createGroupModalVisible.value = true
-}
-
-const handleCreateGroup = async () => {
-  if (!newGroupName.value.trim()) {
-    message.error('请输入群组名称')
-    return
-  }
-  
-  try {
-    const response = await axios.post('/api/group/create', {
-      name: newGroupName.value
-    })
-    if (response.data.success) {
-      groups.value.push(response.data.data)
-      createGroupModalVisible.value = false
-      newGroupName.value = ''
-      message.success('群组创建成功')
-    }
-  } catch (error) {
-    message.error('创建群组失败')
-  }
-}
 
 // WebSocket连接
 const connectWebSocket = () => {
@@ -416,12 +306,6 @@ const connectWebSocket = () => {
       case 'friend_deleted':
         handleFriendDeleted(data.friendId);
         break;
-      case 'group_message':
-        handleGroupMessage(data);
-        break;
-      case 'group_created':
-        groups.value.push(data.group);
-        break;
     }
   };
 
@@ -438,30 +322,6 @@ const connectWebSocket = () => {
     console.error('WebSocket错误:', error);
   };
 };
-
-// 处理新消息
-// 处理群组消息
-const handleGroupMessage = (message) => {
-  if (currentGroup.value?.id === message.groupId) {
-    messages.value.push({
-      ...message,
-      fromUser: message.fromUser
-    })
-    scrollToBottom()
-    
-    // 标记消息为已读
-    if (message.id) {
-      axios.put(`/api/group_messages/read/${message.id}`).catch(console.error)
-    }
-  } else {
-    // 更新群组未读计数
-    const group = groups.value.find(g => g.id === message.groupId)
-    if (group) {
-      group.unreadCount = (group.unreadCount || 0) + 1
-      message.info(`收到来自群组 ${group.name} 的新消息`)
-    }
-  }
-}
 
 const handleNewMessage = (message) => {
   console.log('处理新消息:', message);
@@ -551,23 +411,10 @@ const selectFriend = async (friend) => {
 
 // 发送消息
 const handleSend = async (messageData) => {
-  if ((!currentFriend.value && !currentGroup.value) || currentFriend.value?.isDeleted) return;
+  if (!currentFriend.value || currentFriend.value?.isDeleted) return;
 
   try {
-    let message = currentGroup.value ? {
-      type: messageData.type,
-      content: messageData.content,
-      metadata: messageData.metadata,
-      fromUserId: userStore.id,
-      groupId: currentGroup.value.id,
-      create_time: new Date().toISOString(),
-      fromUser: {
-        id: userStore.id,
-        username: userStore.username,
-        nickname: userStore.nickname,
-        avatar: userStore.avatar
-      }
-    } : {
+    let message = {
       type: messageData.type,
       content: messageData.content,
       metadata: messageData.metadata,
@@ -944,10 +791,9 @@ const handleAcceptBank = async (bank, fromUserId) => {
 };
 
 onMounted(() => {
-  // 先获取好友列表、群组列表和请求
+  // 获取好友列表和请求
   Promise.all([
     fetchFriends(),
-    fetchGroups(),
     fetchFriendRequests()
   ]).then(() => {
     // 然后建立WebSocket连接
@@ -1030,40 +876,6 @@ onUnmounted(() => {
   background: #f5f5f5;
 }
 
-.group-item {
-  padding: 12px 16px;
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.group-item:hover {
-  background: #f5f5f5;
-}
-
-.group-item.active {
-  background: #e6f7ff;
-}
-
-.group-info {
-  margin-left: 12px;
-  flex: 1;
-  min-width: 0;
-}
-
-.group-name {
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.group-members {
-  font-size: 12px;
-  color: #999;
-}
-
 .friend-info {
   margin-left: 12px;
   flex: 1;
@@ -1135,27 +947,15 @@ onUnmounted(() => {
   color: #fff;
 }
 
-.group-message .message-bubble {
-  background: #f0f2f5;
-  border: 1px solid #d9d9d9;
-}
-
-.message-sender {
+.message-time {
   font-size: 12px;
-  color: #666;
-  margin-bottom: 4px;
-  padding-left: 44px;
+  color: #999;
+  margin-top: 4px;
+  text-align: right;
 }
 
-.group-scroll {
-  flex: 1;
-  overflow-y: auto;
-  padding: 8px 0;
-}
-
-.group-create {
-  padding: 8px 16px;
-  border-bottom: 1px solid #f0f0f0;
+.message-self .message-time {
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .message-image {
@@ -1181,17 +981,6 @@ onUnmounted(() => {
 .message-self .message-bubble .message-image {
   border: 2px solid #fff;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.message-time {
-  font-size: 12px;
-  color: #999;
-  margin-top: 4px;
-  text-align: right;
-}
-
-.message-self .message-time {
-  color: rgba(255, 255, 255, 0.8);
 }
 
 .file-message {
@@ -1405,8 +1194,8 @@ onUnmounted(() => {
   color: #fff;
 }
 
-.message-self .file-name {
-  color: #fff;
+.message-self .file-size {
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .question-bank-message {

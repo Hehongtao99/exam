@@ -1,55 +1,40 @@
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/db');
-const User = require('./user');
-const Group = require('./group');
 
-const GroupMessage = sequelize.define('group_message', {
+const GroupMessage = sequelize.define('GroupMessage', {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true
   },
-  groupId: {
+  group_id: {
     type: DataTypes.INTEGER,
     allowNull: false,
-    references: {
-      model: 'groups',
-      key: 'id'
-    }
+    comment: '群组ID'
   },
-  fromUserId: {
+  from_user_id: {
     type: DataTypes.INTEGER,
     allowNull: false,
-    references: {
-      model: 'users',
-      key: 'id'
-    }
+    comment: '发送者ID'
   },
   type: {
     type: DataTypes.STRING(20),
     allowNull: false,
-    defaultValue: 'text'
+    defaultValue: 'text',
+    comment: '消息类型'
   },
   content: {
     type: DataTypes.TEXT,
-    allowNull: false
+    allowNull: false,
+    comment: '消息内容'
   },
   metadata: {
     type: DataTypes.JSON,
-    allowNull: true
+    allowNull: true,
+    comment: '消息元数据'
   },
-  isRecalled: {
-    type: DataTypes.BOOLEAN,
-    allowNull: false,
-    defaultValue: false
-  },
-  recallTime: {
+  create_time: {
     type: DataTypes.DATE,
-    allowNull: true
-  },
-  createTime: {
-    type: DataTypes.DATE,
-    allowNull: false,
     defaultValue: DataTypes.NOW
   }
 }, {
@@ -57,26 +42,15 @@ const GroupMessage = sequelize.define('group_message', {
   timestamps: false,
   indexes: [
     {
-      fields: ['groupId']
+      fields: ['group_id']
     },
     {
-      fields: ['fromUserId']
+      fields: ['from_user_id']
     },
     {
-      fields: ['createTime']
+      fields: ['create_time']
     }
   ]
-});
-
-// 关联关系
-GroupMessage.belongsTo(User, {
-  foreignKey: 'fromUserId',
-  as: 'fromUser'
-});
-
-GroupMessage.belongsTo(Group, {
-  foreignKey: 'groupId',
-  as: 'group'
 });
 
 module.exports = GroupMessage; 

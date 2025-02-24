@@ -1,51 +1,35 @@
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/db');
-const User = require('./user');
-const Group = require('./group');
 
-const GroupMember = sequelize.define('group_member', {
+const GroupMember = sequelize.define('GroupMember', {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true
   },
-  groupId: {
+  group_id: {
     type: DataTypes.INTEGER,
     allowNull: false,
-    references: {
-      model: 'groups',
-      key: 'id'
-    }
+    comment: '群组ID'
   },
-  userId: {
+  user_id: {
     type: DataTypes.INTEGER,
     allowNull: false,
-    references: {
-      model: 'users',
-      key: 'id'
-    }
+    comment: '用户ID'
   },
   nickname: {
     type: DataTypes.STRING(50),
-    allowNull: true
+    allowNull: true,
+    comment: '群昵称'
   },
   role: {
     type: DataTypes.ENUM('owner', 'admin', 'member'),
     allowNull: false,
-    defaultValue: 'member'
+    defaultValue: 'member',
+    comment: '成员角色'
   },
-  muteEndTime: {
+  join_time: {
     type: DataTypes.DATE,
-    allowNull: true
-  },
-  status: {
-    type: DataTypes.ENUM('active', 'left', 'kicked'),
-    allowNull: false,
-    defaultValue: 'active'
-  },
-  joinTime: {
-    type: DataTypes.DATE,
-    allowNull: false,
     defaultValue: DataTypes.NOW
   }
 }, {
@@ -54,20 +38,9 @@ const GroupMember = sequelize.define('group_member', {
   indexes: [
     {
       unique: true,
-      fields: ['groupId', 'userId']
+      fields: ['group_id', 'user_id']
     }
   ]
-});
-
-// 关联关系
-GroupMember.belongsTo(User, {
-  foreignKey: 'userId',
-  as: 'user'
-});
-
-GroupMember.belongsTo(Group, {
-  foreignKey: 'groupId',
-  as: 'group'
 });
 
 module.exports = GroupMember; 

@@ -117,8 +117,15 @@ router.put('/request/:id', async (req, res) => {
 
     await request.update({ status });
 
-    // 如果接受了好友请求，发送通知给双方
+    // 如果接受了好友请求，创建双向的好友关系
     if (status === 'accepted') {
+      // 创建反向的好友关系记录
+      await Friend.create({
+        userId: parseInt(userId),
+        friendId: request.userId,
+        status: 'accepted'
+      });
+
       sendFriendshipUpdateNotification(request.userId, parseInt(userId), 'accepted');
       
       // 获取新好友的完整信息
@@ -150,6 +157,12 @@ router.put('/request/:id', async (req, res) => {
 router.get('/list', async (req, res) => {
   try {
     const userId = req.headers['x-user-id'];
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: '未登录'
+      });
+    }
 
     const friends = await Friend.findAll({
       where: {
@@ -159,40 +172,29 @@ router.get('/list', async (req, res) => {
         ],
         status: 'accepted'
       },
-      include: [
-        {
-          model: User,
-          as: 'user',
-          attributes: ['id', 'username', 'nickname', 'avatar']
-        },
-        {
-          model: User,
-          as: 'friendInfo',
-          attributes: ['id', 'username', 'nickname', 'avatar']
+      include: [{
+        model: User,
+        as: 'friendInfo',
+        attributes: ['id', 'username', 'nickname', 'avatar', 'signature'],
+        where: {
+          id: {
+            [Op.ne]: parseInt(userId) // 确保不返回自己作为好友的记录
+          }
         }
-      ]
+      }]
     });
 
-    // 处理好友列表数据，使用 Set 去重
-    const friendSet = new Set();
-    const friendList = friends.reduce((acc, friend) => {
-      const isFriend = friend.userId === parseInt(userId);
-      const friendData = isFriend ? friend.friendInfo : friend.user;
-      
-      // 如果这个好友还没有被添加过
-      if (!friendSet.has(friendData.id)) {
-        friendSet.add(friendData.id);
-        acc.push({
-          id: friendData.id,
-          username: friendData.username,
-          nickname: friend.nickname || friendData.nickname || friendData.username,
-          avatar: friendData.avatar,
-          remark: friend.nickname
-        });
-      }
-      
-      return acc;
-    }, []);
+    // 处理好友列表数据
+    const friendList = friends.map(friend => {
+      const friendData = friend.friendInfo;
+      return {
+        id: friendData.id,
+        username: friendData.username,
+        nickname: friendData.nickname,
+        avatar: friendData.avatar,
+        signature: friendData.signature
+      };
+    });
 
     res.json({
       success: true,
@@ -286,7 +288,8 @@ router.delete('/:friendId', async (req, res) => {
     const userId = req.headers['x-user-id'];
     const { friendId } = req.params;
 
-    const friend = await Friend.findOne({
+    // 删除双向的好友关系
+    await Friend.destroy({
       where: {
         [Op.or]: [
           { userId: parseInt(userId), friendId: parseInt(friendId) },
@@ -295,16 +298,6 @@ router.delete('/:friendId', async (req, res) => {
         status: 'accepted'
       }
     });
-
-    if (!friend) {
-      return res.status(404).json({
-        success: false,
-        message: '好友关系不存在'
-      });
-    }
-
-    // 删除好友关系
-    await friend.destroy();
 
     // 通知被删除的好友
     sendFriendshipUpdateNotification(parseInt(friendId), parseInt(userId), 'deleted');

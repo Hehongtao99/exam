@@ -369,11 +369,11 @@ router.post('/mistake-book/add', async (req, res) => {
   }
 });
 
-// 获取错题本列表
+// 获取用户的错题本列表
 router.get('/mistake-book/:userId', async (req, res) => {
   try {
-    const { userId } = req.params;
-    const mistakeBooks = await MistakeBook.findAll({
+    const userId = req.params.userId;
+    const books = await MistakeBook.findAll({
       where: { userId: parseInt(userId) },
       include: [{
         model: MistakeRecord,
@@ -381,24 +381,20 @@ router.get('/mistake-book/:userId', async (req, res) => {
         include: [{
           model: Question,
           as: 'question',
-          attributes: ['content', 'type', 'options', 'answer']
+          attributes: ['type', 'content']
         }]
-      }],
-      order: [['create_time', 'DESC']]
+      }]
     });
-
-    // 打印返回的数据以便调试
-    console.log('Mistake books data:', JSON.stringify(mistakeBooks, null, 2));
 
     res.json({
       success: true,
-      data: mistakeBooks
+      data: books
     });
   } catch (error) {
     console.error('获取错题本列表失败:', error);
     res.status(500).json({
       success: false,
-      message: '服务器错误，请稍后重试'
+      message: '服务器错误'
     });
   }
 });
@@ -504,13 +500,13 @@ router.get('/mistake-book/:bookId/questions', async (req, res) => {
       where: { bookId },
       include: [{
         model: Question,
-        as: 'question',
+        as: 'mistakeQuestion',
         attributes: ['id', 'type', 'content', 'options', 'answer', 'analysis']
       }]
     });
     
     const questions = records.map(record => ({
-      ...record.question.toJSON(),
+      ...record.mistakeQuestion.toJSON(),
       errorCount: record.errorCount
     }));
     

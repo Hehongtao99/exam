@@ -18,7 +18,6 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/user', require('./routes/user'));
 app.use('/api/friend', require('./routes/friend'));
 app.use('/api/message', require('./routes/message'));
-app.use('/api/group', require('./routes/group')); // 新增群组路由
 
 // 错误处理中间件
 app.use((err, req, res, next) => {

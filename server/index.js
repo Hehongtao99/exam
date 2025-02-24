@@ -13,6 +13,7 @@ const friendRoutes = require('./routes/friend');
 const messageRoutes = require('./routes/message');
 const uploadRoutes = require('./routes/upload');
 const adminRoutes = require('./routes/admin');
+const groupRoutes = require('./routes/group');
 
 // 导入所有模型以确保关联关系被正确建立
 require('./models');
@@ -45,6 +46,7 @@ app.use('/api/friends', friendRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/groups', groupRoutes);
 
 // 404处理
 app.use((req, res) => {

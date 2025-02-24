@@ -3,6 +3,9 @@ const Message = require('./models/message');
 const User = require('./models/user');
 const Friend = require('./models/friend');
 const { Op } = require('sequelize');
+const GroupMember = require('./models/groupMember');
+const GroupMessage = require('./models/groupMessage');
+const GroupMessageRead = require('./models/groupMessageRead');
 
 // 存储在线用户的WebSocket连接
 const clients = new Map();
@@ -168,6 +171,42 @@ async function broadcastStatus(userId, status) {
   }
 }
 
+// 修改发送群消息的函数
+async function sendGroupMessage(groupId, message) {
+  try {
+    // 获取群组所有成员
+    const members = await GroupMember.findAll({
+      where: { group_id: groupId },
+      include: [{
+        model: User,
+        as: 'user',
+        attributes: ['id', 'username', 'nickname', 'avatar']
+      }]
+    });
+
+    console.log(`准备向群组 ${groupId} 的 ${members.length} 名成员发送消息`);
+
+    // 遍历所有成员发送消息
+    for (const member of members) {
+      const ws = clients.get(member.user_id);
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        console.log(`向用户 ${member.user_id} 发送群消息`);
+        ws.send(JSON.stringify({
+          ...message,
+          type: message.type // 确保消息类型正确传递
+        }));
+      } else {
+        console.log(`用户 ${member.user_id} 不在线或WebSocket未连接`);
+      }
+    }
+
+    return true;
+  } catch (error) {
+    console.error('发送群消息失败:', error);
+    return false;
+  }
+}
+
 function initWebSocket(server) {
   const wss = new WebSocket.Server({ server });
 
@@ -220,75 +259,107 @@ function initWebSocket(server) {
         const syncManager = new MessageSyncManager(ws, userIdNum);
 
         // 处理消息
-        ws.on('message', async (message) => {
+        ws.on('message', async (data) => {
           try {
-            const data = JSON.parse(message);
-            console.log('收到消息:', data);
-            
-            switch (data.type) {
-              case 'text':
-              case 'image':
-              case 'file':
-              case 'question_bank':
-                // 检查是否仍然是好友关系
-                const isFriend = await checkFriendship(userIdNum, data.toUserId);
-                if (!isFriend) {
-                  ws.send(JSON.stringify({
-                    type: 'friend_deleted',
-                    friendId: data.toUserId
-                  }));
-                  return;
-                }
+            const message = JSON.parse(data);
+            console.log('收到WebSocket消息:', message);
 
-                // 保存消息到数据库
-                const msg = await Message.create({
-                  fromUserId: userIdNum,
-                  toUserId: data.toUserId,
-                  type: data.type,
-                  content: data.content,
-                  metadata: data.metadata || {}
-                });
+            // 处理群消息
+            if (message.groupId) {
+              // 保存消息到数据库
+              const groupMessage = await GroupMessage.create({
+                group_id: message.groupId,
+                from_user_id: userIdNum,
+                type: message.type,
+                content: message.content,
+                metadata: message.metadata || null
+              });
 
-                // 发送消息给发送者确认
+              // 获取发送者信息
+              const fromUser = await User.findByPk(userIdNum, {
+                attributes: ['id', 'username', 'nickname', 'avatar']
+              });
+
+              // 构建要广播的消息
+              const broadcastMessage = {
+                ...message,
+                id: groupMessage.id,
+                messageId: message.messageId,
+                create_time: groupMessage.create_time,
+                fromUser: {
+                  id: fromUser.id,
+                  username: fromUser.username,
+                  nickname: fromUser.nickname,
+                  avatar: fromUser.avatar
+                },
+                type: message.type
+              };
+
+              console.log('准备广播群消息:', broadcastMessage);
+
+              // 广播消息给群组所有成员（包括发送者）
+              await sendGroupMessage(message.groupId, broadcastMessage);
+
+              // 发送确认消息给发送者
+              ws.send(JSON.stringify({
+                type: 'message_status',
+                messageId: message.messageId,
+                status: 'sent'
+              }));
+            } else {
+              // 检查是否仍然是好友关系
+              const isFriend = await checkFriendship(userIdNum, message.toUserId);
+              if (!isFriend) {
                 ws.send(JSON.stringify({
-                  type: 'message_status',
-                  messageId: data.messageId,
-                  status: 'sent'
+                  type: 'friend_deleted',
+                  friendId: message.toUserId
                 }));
+                return;
+              }
 
-                // 如果接收者在线，直接发送消息
-                const recipientWs = clients.get(data.toUserId);
-                if (recipientWs) {
-                  recipientWs.send(JSON.stringify({
-                    type: data.type,
-                    messageId: msg.id,
-                    fromUserId: userIdNum,
-                    content: data.content,
-                    metadata: data.metadata || {},
-                    create_time: msg.create_time,
-                    fromUser: {
-                      id: userIdNum,
-                      username: data.fromUser?.username,
-                      nickname: data.fromUser?.nickname,
-                      avatar: data.fromUser?.avatar
-                    }
-                  }));
-                }
-                break;
+              // 保存消息到数据库
+              const msg = await Message.create({
+                fromUserId: userIdNum,
+                toUserId: message.toUserId,
+                type: message.type,
+                content: message.content,
+                metadata: message.metadata || {}
+              });
 
-              case 'read':
-                await Message.update(
-                  { isRead: true },
-                  { where: { id: data.messageId } }
-                );
-                break;
+              // 发送消息给发送者确认
+              ws.send(JSON.stringify({
+                type: 'message_status',
+                messageId: message.messageId,
+                status: 'sent'
+              }));
 
-              case 'message_ack':
-                syncManager.confirmMessage(data.messageId);
-                break;
+              // 如果接收者在线，直接发送消息
+              const recipientWs = clients.get(message.toUserId);
+              if (recipientWs) {
+                recipientWs.send(JSON.stringify({
+                  type: message.type,
+                  messageId: msg.id,
+                  fromUserId: userIdNum,
+                  content: message.content,
+                  metadata: message.metadata || {},
+                  create_time: msg.create_time,
+                  fromUser: {
+                    id: userIdNum,
+                    username: message.fromUser?.username,
+                    nickname: message.fromUser?.nickname,
+                    avatar: message.fromUser?.avatar
+                  }
+                }));
+              }
             }
           } catch (error) {
-            console.error('WebSocket消息处理错误:', error);
+            console.error('处理WebSocket消息失败:', error);
+            ws.send(JSON.stringify({
+              type: 'message_status',
+              messageId: message?.messageId,
+              status: 'error',
+              error: '消息发送失败'
+            }));
           }
         });
 
@@ -383,5 +454,6 @@ function sendFriendshipUpdateNotification(userId1, userId2, action) {
 module.exports = {
   initWebSocket,
   sendFriendRequestNotification,
-  sendFriendshipUpdateNotification
+  sendFriendshipUpdateNotification,
+  sendGroupMessage
 }; 
