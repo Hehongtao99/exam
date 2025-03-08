@@ -403,6 +403,27 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 24px;
+  max-height: calc(100vh - 450px);
+  overflow-y: auto;
+  padding-right: 16px;
+}
+
+.question-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.question-list::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 3px;
+}
+
+.question-list::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+
+.question-list::-webkit-scrollbar-thumb:hover {
+  background: #999;
 }
 
 .question-item {

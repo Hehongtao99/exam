@@ -312,7 +312,68 @@ router.post('/mistake-book', async (req, res) => {
   }
 });
 
-// 添加错题到错题本
+// 获取错题本列表
+router.get('/mistake-book/list', async (req, res) => {
+  try {
+    const userId = req.headers['x-user-id'];
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: '未登录'
+      });
+    }
+
+    const books = await MistakeBook.findAll({
+      where: { userId: parseInt(userId) },
+      include: [{
+        model: MistakeRecord,
+        as: 'mistakeRecords',
+        attributes: ['id', 'bookId', 'questionId', 'error_count', 'create_time'],
+        include: [{
+          model: Question,
+          as: 'question',
+          attributes: ['id', 'type', 'content', 'options', 'answer', 'analysis']
+        }]
+      }]
+    });
+
+    // 处理每个错题本的数据
+    const formattedBooks = books.map(book => {
+      const bookData = book.toJSON();
+      bookData.records = bookData.mistakeRecords.map(record => {
+        const questionData = record.question;
+        if (questionData.type === 'single' || questionData.type === 'multiple') {
+          questionData.options = typeof questionData.options === 'string'
+            ? JSON.parse(questionData.options)
+            : questionData.options;
+        }
+        return {
+          ...record,
+          errorCount: record.error_count || 1,
+          question: {
+            ...questionData,
+            explanation: questionData.analysis
+          }
+        };
+      });
+      delete bookData.mistakeRecords;
+      return bookData;
+    });
+
+    res.json({
+      success: true,
+      data: formattedBooks
+    });
+  } catch (error) {
+    console.error('获取错题本列表失败:', error);
+    res.status(500).json({
+      success: false,
+      message: '服务器错误'
+    });
+  }
+});
+
+// 添加题目到错题本
 router.post('/mistake-book/add', async (req, res) => {
   const t = await sequelize.transaction();
   try {
@@ -324,11 +385,11 @@ router.post('/mistake-book/add', async (req, res) => {
       });
     }
 
-    const { bookId, questionIds } = req.body;
+    const { bookId, questionId } = req.body;
 
-    // 检查错题本是否属于当前用户
+    // 检查错题本是否存在且属于当前用户
     const book = await MistakeBook.findOne({
-      where: { 
+      where: {
         id: bookId,
         userId: parseInt(userId)
       }
@@ -340,58 +401,38 @@ router.post('/mistake-book/add', async (req, res) => {
         message: '错题本不存在或无权访问'
       });
     }
-    
-    // 批量创建错题记录
-    await MistakeRecord.bulkCreate(
-      questionIds.map(questionId => ({
+
+    // 检查题目是否已在错题本中
+    let record = await MistakeRecord.findOne({
+      where: {
         bookId,
         questionId
-      })),
-      { 
-        transaction: t,
-        ignoreDuplicates: true
       }
-    );
-    
+    });
+
+    if (record) {
+      // 如果题目已存在，增加错误次数
+      await record.update({
+        error_count: record.error_count + 1
+      }, { transaction: t });
+    } else {
+      // 如果题目不存在，创建新记录
+      record = await MistakeRecord.create({
+        bookId,
+        questionId,
+        error_count: 1
+      }, { transaction: t });
+    }
+
     await t.commit();
-    
+
     res.json({
       success: true,
-      message: '添加成功'
+      data: record
     });
   } catch (error) {
     await t.rollback();
     console.error('添加错题失败:', error);
-    res.status(500).json({
-      success: false,
-      message: '服务器错误'
-    });
-  }
-});
-
-// 获取用户的错题本列表
-router.get('/mistake-book/:userId', async (req, res) => {
-  try {
-    const userId = req.params.userId;
-    const books = await MistakeBook.findAll({
-      where: { userId: parseInt(userId) },
-      include: [{
-        model: MistakeRecord,
-        as: 'mistakeRecords',
-        include: [{
-          model: Question,
-          as: 'question',
-          attributes: ['type', 'content']
-        }]
-      }]
-    });
-
-    res.json({
-      success: true,
-      data: books
-    });
-  } catch (error) {
-    console.error('获取错题本列表失败:', error);
     res.status(500).json({
       success: false,
       message: '服务器错误'
@@ -500,19 +541,31 @@ router.get('/mistake-book/:bookId/questions', async (req, res) => {
       where: { bookId },
       include: [{
         model: Question,
-        as: 'mistakeQuestion',
+        as: 'question',
         attributes: ['id', 'type', 'content', 'options', 'answer', 'analysis']
       }]
     });
     
     const questions = records.map(record => ({
-      ...record.mistakeQuestion.toJSON(),
-      errorCount: record.errorCount
+      ...record.question.toJSON(),
+      errorCount: record.error_count
     }));
     
     res.json({
       success: true,
-      data: questions
+      data: {
+        book: {
+          id: book.id,
+          name: book.name,
+          description: book.description,
+          createTime: book.create_time
+        },
+        questions: questions.map(q => ({
+          ...q,
+          options: typeof q.options === 'string' ? JSON.parse(q.options) : q.options,
+          errorCount: q.error_count || 1
+        }))
+      }
     });
   } catch (error) {
     console.error(error);
@@ -567,7 +620,7 @@ router.post('/mistake-practice/submit', async (req, res) => {
         
         if (record) {
           await record.update({
-            errorCount: record.errorCount + 1
+            error_count: record.error_count + 1
           }, { transaction: t });
         }
       }

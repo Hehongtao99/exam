@@ -15,6 +15,12 @@ const MistakeRecord = sequelize.define('MistakeRecord', {
     type: DataTypes.INTEGER,
     allowNull: false
   },
+  error_count: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 1,
+    comment: '错误次数'
+  },
   create_time: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW

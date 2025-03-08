@@ -4,13 +4,12 @@ import Login from '../views/Login.vue'
 import Dashboard from '../views/Dashboard.vue'
 import QuestionBank from '../views/QuestionBank.vue'
 import Questions from '../views/Questions.vue'
-import Exam from '../views/Exam.vue'
-import ExamResult from '../views/ExamResult.vue'
 import MistakeBooks from '../views/MistakeBooks.vue'
 import MistakeExam from '../views/MistakeExam.vue'
 import UserHome from '../views/Dashboard/Home.vue'
 import AdminHome from '../views/Admin/Home.vue'
 import Profile from '../views/Profile.vue'
+import MistakeBookDetail from '../views/MistakeBookDetail.vue'
 
 const routes = [
   {
@@ -88,11 +87,6 @@ const routes = [
         component: Questions
       },
       {
-        path: 'exams',
-        name: 'ExamManagement',
-        component: () => import('../views/ExamManagement.vue')
-      },
-      {
         path: 'exam/:bankId',
         name: 'Exam',
         component: () => import('../views/Exam.vue')
@@ -106,6 +100,11 @@ const routes = [
         path: 'mistake-books',
         name: 'MistakeBooks',
         component: MistakeBooks
+      },
+      {
+        path: 'mistake-books/:id',
+        name: 'MistakeBookDetail',
+        component: MistakeBookDetail
       },
       {
         path: 'mistake-exam/:bookId',

@@ -12,16 +12,16 @@
       
       <a-row :gutter="[16, 16]">
         <a-col :span="8" v-for="book in mistakeBooks" :key="book.id">
-          <a-card hoverable>
+          <a-card hoverable @click="viewBookDetail(book.id)">
             <template #title>
               <div class="book-header">
                 <span class="book-title">{{ book.name }}</span>
-                <a-tag>{{ book.mistakeRecords?.length || 0 }}题</a-tag>
+                <a-tag>{{ book.records?.length || 0 }}题</a-tag>
               </div>
             </template>
             <template #extra>
               <a-space>
-                <a-button type="link" @click="startPractice(book.id)">
+                <a-button type="link" @click.stop="startPractice(book.id)">
                   开始练习
                 </a-button>
               </a-space>
@@ -108,9 +108,13 @@ const startPractice = (bookId) => {
   router.push(`/dashboard/mistake-exam/${bookId}`)
 }
 
+const viewBookDetail = (bookId) => {
+  router.push(`/dashboard/mistake-books/${bookId}`)
+}
+
 const fetchMistakeBooks = async () => {
   try {
-    const response = await axios.get(`/api/exams/mistake-book/${userStore.id}`)
+    const response = await axios.get('/api/exams/mistake-book/list')
     if (response.data.success) {
       console.log('Received mistake books:', response.data.data);
       mistakeBooks.value = response.data.data;

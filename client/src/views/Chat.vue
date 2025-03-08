@@ -371,8 +371,6 @@ const handleNewMessage = (message) => {
     const friend = friends.value.find(f => f.id === message.fromUserId);
     if (friend) {
       friend.unreadCount = (friend.unreadCount || 0) + 1;
-      // 显示消息提醒
-      message.info(`收到来自 ${friend.nickname || friend.username} 的新消息`);
     }
   }
 };
@@ -1206,7 +1204,8 @@ onUnmounted(() => {
 }
 
 .message-self .question-bank-message {
-  background: #e6f7ff;
+  background: #1890ff;
+  color: #fff;
 }
 
 .bank-list {
@@ -1221,6 +1220,10 @@ onUnmounted(() => {
   padding: 12px;
 }
 
+.message-self .bank-item {
+  background: rgba(255, 255, 255, 0.1);
+}
+
 .bank-header {
   display: flex;
   align-items: center;
@@ -1233,12 +1236,21 @@ onUnmounted(() => {
   font-size: 20px;
 }
 
+.message-self .bank-icon {
+  color: #fff;
+}
+
 .bank-name {
   font-weight: 500;
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  color: #333;
+}
+
+.message-self .bank-name {
+  color: #fff;
 }
 
 .bank-desc {
@@ -1251,6 +1263,10 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
+.message-self .bank-desc {
+  color: rgba(255, 255, 255, 0.8);
+}
+
 .bank-footer {
   display: flex;
   justify-content: space-between;
@@ -1260,5 +1276,9 @@ onUnmounted(() => {
 .bank-count {
   font-size: 12px;
   color: #999;
+}
+
+.message-self .bank-count {
+  color: rgba(255, 255, 255, 0.8);
 }
 </style>

@@ -509,7 +509,14 @@ router.post('/:groupId/members', async (req, res) => {
   try {
     const { groupId } = req.params;
     const userId = req.headers['x-user-id'];
-    const { memberIds } = req.body;
+    const { userIds } = req.body;
+
+    if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: '请选择要邀请的成员'
+      });
+    }
 
     // 检查权限
     const member = await GroupMember.findOne({
@@ -534,13 +541,13 @@ router.post('/:groupId/members', async (req, res) => {
       where: {
         group_id: parseInt(groupId),
         user_id: {
-          [Op.in]: memberIds
+          [Op.in]: userIds
         }
       }
     });
 
     const existingMemberIds = existingMembers.map(m => m.user_id);
-    const newMemberIds = memberIds.filter(id => !existingMemberIds.includes(id));
+    const newMemberIds = userIds.filter(id => !existingMemberIds.includes(parseInt(id)));
 
     // 添加新成员
     if (newMemberIds.length > 0) {
@@ -561,7 +568,7 @@ router.post('/:groupId/members', async (req, res) => {
     console.error('邀请成员失败:', error);
     res.status(500).json({
       success: false,
-      message: '服务器错误'
+      message: error.message || '服务器错误'
     });
   }
 });

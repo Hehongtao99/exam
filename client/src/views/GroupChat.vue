@@ -12,9 +12,6 @@
               </template>
             </a-button>
           </a-badge>
-          <a-button type="primary" @click="showJoinGroupModal">
-            加入群组
-          </a-button>
           <a-button type="primary" @click="showCreateGroupModal">
             创建群组
           </a-button>
@@ -337,41 +334,29 @@
       title="邀请好友"
       @ok="handleInvite"
       :confirmLoading="inviting"
+      width="500px"
     >
-      <a-transfer
-        v-model:targetKeys="selectedFriends"
-        :data-source="friendsData"
-        :render="item => item.title"
-        :show-search="true"
-        :filter-option="filterOption"
-      />
-    </a-modal>
-
-    <!-- 加入群组对话框 -->
-    <a-modal
-      v-model:open="joinGroupModalVisible"
-      title="加入群组"
-      @ok="handleJoinGroup"
-      :confirmLoading="joining"
-    >
-      <a-form :model="joinGroupForm">
-        <a-form-item label="群号" required>
-          <a-input-search
-            v-model:value="joinGroupForm.groupNumber"
-            placeholder="请输入群号"
-            @search="searchGroup"
-          />
-        </a-form-item>
-        <div v-if="searchedGroup" class="searched-group">
-          <a-avatar :size="40" :src="searchedGroup.avatar">
-            {{ searchedGroup.name.substring(0, 1) }}
-          </a-avatar>
-          <div class="searched-group-info">
-            <div class="searched-group-name">{{ searchedGroup.name }}</div>
-            <div class="searched-group-desc">{{ searchedGroup.description || '暂无描述' }}</div>
-          </div>
+      <a-form-item label="选择好友" required>
+        <div class="friend-selection">
+          <a-checkbox-group v-model:value="selectedFriends">
+            <div class="friend-list">
+              <a-checkbox 
+                v-for="friend in friendsData" 
+                :key="friend.key" 
+                :value="friend.key"
+                class="friend-item"
+              >
+                <div class="friend-info">
+                  <a-avatar :size="24" :src="friend.avatar">
+                    {{ friend.title.substring(0, 1) }}
+                  </a-avatar>
+                  <span class="friend-name">{{ friend.title }}</span>
+                </div>
+              </a-checkbox>
+            </div>
+          </a-checkbox-group>
         </div>
-      </a-form>
+      </a-form-item>
     </a-modal>
 
     <!-- 群组申请审核对话框 -->
@@ -592,9 +577,7 @@ const groupInfoModalVisible = ref(false);
 const inviteModalVisible = ref(false);
 const creating = ref(false);
 const inviting = ref(false);
-const joinGroupModalVisible = ref(false);
 const groupRequestsModalVisible = ref(false);
-const joining = ref(false);
 const searchedGroup = ref(null);
 const groupRequests = ref([]);
 const questionBankModalVisible = ref(false);
@@ -603,22 +586,20 @@ const myQuestionBanks = ref([]);
 const publicQuestionBanks = ref([]);
 const selectedQuestionBanks = ref({});
 const loadingQuestionBanks = ref(false);
+const selectedFriends = ref([]);
+const friendsData = ref([]);
 
-// 添加文件列表相关的状态
-const fileListModalVisible = ref(false);
-const activeFileTab = ref('all');
-const fileList = ref([]);
-const loadingFiles = ref(false);
+// 添加是否有可管理群组的计算属性
+const hasManageableGroups = computed(() => {
+  return groups.value.some(group => {
+    const member = group.members?.find(m => m.user_id === userStore.id);
+    return member?.role === 'owner' || member?.role === 'admin';
+  });
+});
 
 const groupForm = ref({
   name: '',
   description: ''
-});
-
-const selectedFriends = ref([]);
-const friendsData = ref([]);
-const joinGroupForm = ref({
-  groupNumber: ''
 });
 
 const isOwner = computed(() => {
@@ -860,33 +841,40 @@ const showInviteModal = async () => {
         .map(friend => ({
           key: friend.id.toString(),
           title: friend.nickname || friend.username,
-          description: friend.signature || '暂无签名'
+          description: friend.signature || '暂无签名',
+          avatar: friend.avatar
         }));
       selectedFriends.value = [];
       inviteModalVisible.value = true;
     }
   } catch (error) {
+    console.error('获取好友列表失败:', error);
     message.error('获取好友列表失败');
   }
 };
 
-// 邀请好友
+// 修改邀请好友的方法
 const handleInvite = async () => {
-  if (selectedFriends.value.length === 0) {
+  if (!selectedFriends.value || selectedFriends.value.length === 0) {
     message.warning('请选择要邀请的好友');
     return;
   }
 
   inviting.value = true;
   try {
-    await axios.post(`/api/groups/${selectedGroup.value.id}/members`, {
-      userIds: selectedFriends.value.map(key => parseInt(key))
+    const response = await axios.post(`/api/groups/${selectedGroup.value.id}/members`, {
+      userIds: selectedFriends.value.map(id => parseInt(id, 10))
     });
-    message.success('邀请成功');
-    inviteModalVisible.value = false;
-    await showGroupInfo();
+
+    if (response.data.success) {
+      message.success('邀请成功');
+      inviteModalVisible.value = false;
+      selectedFriends.value = [];
+      await showGroupInfo();
+    }
   } catch (error) {
-    message.error('邀请失败');
+    console.error('邀请失败:', error);
+    message.error(error.response?.data?.message || '邀请失败');
   } finally {
     inviting.value = false;
   }
@@ -918,8 +906,14 @@ const getRowSelection = ({ disabled, selectedKeys, onItemSelectAll, onItemSelect
 
 // 修改获取未读消息数的方法
 const fetchUnreadCounts = async () => {
+  if (!userStore.token) return; // 如果没有token，不获取未读消息数
+  
   try {
-    const response = await axios.get('/api/groups/unread');
+    const response = await axios.get('/api/groups/unread', {
+      headers: {
+        Authorization: `Bearer ${userStore.token}`
+      }
+    });
     if (response.data.success) {
       // 更新群组列表中的未读消息数
       const unreadData = response.data.data;
@@ -929,7 +923,9 @@ const fetchUnreadCounts = async () => {
       }));
     }
   } catch (error) {
-    console.error('获取未读消息数失败:', error);
+    if (error.response?.status !== 403) { // 只有非403错误才记录
+      console.error('获取未读消息数失败:', error);
+    }
   }
 };
 
@@ -1015,70 +1011,6 @@ const previewImage = (url) => {
     current: 0
   });
 };
-
-// 显示加入群组对话框
-const showJoinGroupModal = () => {
-  joinGroupForm.value.groupNumber = '';
-  searchedGroup.value = null;
-  joinGroupModalVisible.value = true;
-};
-
-// 搜索群组
-const searchGroup = async () => {
-  if (!joinGroupForm.value.groupNumber) {
-    message.warning('请输入群号');
-    return;
-  }
-
-  try {
-    const response = await axios.get(`/api/groups/search?groupNumber=${joinGroupForm.value.groupNumber}`);
-    if (response.data.success) {
-      searchedGroup.value = response.data.data;
-    } else {
-      message.warning('未找到该群组');
-      searchedGroup.value = null;
-    }
-  } catch (error) {
-    message.error('搜索群组失败');
-  }
-};
-
-// 加入群组
-const handleJoinGroup = async () => {
-  if (!searchedGroup.value) {
-    message.warning('请先搜索群组');
-    return;
-  }
-
-  joining.value = true;
-  try {
-    const response = await axios.post(`/api/groups/${searchedGroup.value.id}/join`);
-    if (response.data.success) {
-      message.success('申请已发送，等待群主审核');
-      joinGroupModalVisible.value = false;
-      // 重置表单
-      joinGroupForm.value.groupNumber = '';
-      searchedGroup.value = null;
-    }
-  } catch (error) {
-    console.error('加入群组失败:', error.response || error);
-    if (error.response?.data?.message) {
-      message.warning(error.response.data.message);
-    } else {
-      message.error('加入群组失败，请稍后重试');
-    }
-  } finally {
-    joining.value = false;
-  }
-};
-
-// 添加是否有可管理群组的计算属性
-const hasManageableGroups = computed(() => {
-  return groups.value.some(group => {
-    const member = group.members?.find(m => m.user_id === userStore.id);
-    return member?.role === 'owner' || member?.role === 'admin';
-  });
-});
 
 // 显示群组申请对话框
 const showGroupRequestsModal = () => {
@@ -1955,5 +1887,37 @@ wsClient.onMessage('announcement_update', (data) => {
 
 .toolbar .ant-btn:hover .anticon {
   color: #1890ff;
+}
+
+.friend-selection {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  padding: 8px;
+}
+
+.friend-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.friend-item {
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+}
+
+.friend-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 8px;
+}
+
+.friend-name {
+  font-size: 14px;
+  color: #000000d9;
 }
 </style> 

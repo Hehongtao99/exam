@@ -1,17 +1,17 @@
 /*
- Navicat Premium Data Transfer
+ Navicat Premium Dump SQL
 
- Source Server         : 113.45.161.48华为云-2c2
+ Source Server         : 113.45.161.48-华为云2c4
  Source Server Type    : MySQL
- Source Server Version : 80041
+ Source Server Version : 80041 (8.0.41)
  Source Host           : 113.45.161.48:3306
  Source Schema         : exam
 
  Target Server Type    : MySQL
- Target Server Version : 80041
+ Target Server Version : 80041 (8.0.41)
  File Encoding         : 65001
 
- Date: 24/02/2025 21:43:22
+ Date: 07/03/2025 14:59:41
 */
 
 SET NAMES utf8mb4;
@@ -32,7 +32,7 @@ CREATE TABLE `exam_answers`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_exam_id`(`exam_id` ASC) USING BTREE,
   INDEX `idx_question_id`(`question_id` ASC) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for exam_details
@@ -48,9 +48,9 @@ CREATE TABLE `exam_details`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `examId`(`examId` ASC) USING BTREE,
   INDEX `questionId`(`questionId` ASC) USING BTREE,
-  CONSTRAINT `exam_details_ibfk_77` FOREIGN KEY (`examId`) REFERENCES `exams` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `exam_details_ibfk_78` FOREIGN KEY (`questionId`) REFERENCES `questions` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
+  CONSTRAINT `exam_details_ibfk_93` FOREIGN KEY (`examId`) REFERENCES `exams` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `exam_details_ibfk_94` FOREIGN KEY (`questionId`) REFERENCES `questions` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE = InnoDB AUTO_INCREMENT = 82 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for exams
@@ -68,9 +68,9 @@ CREATE TABLE `exams`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `userId`(`userId` ASC) USING BTREE,
   INDEX `bankId`(`bankId` ASC) USING BTREE,
-  CONSTRAINT `exams_ibfk_77` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `exams_ibfk_78` FOREIGN KEY (`bankId`) REFERENCES `question_banks` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
+  CONSTRAINT `exams_ibfk_93` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `exams_ibfk_94` FOREIGN KEY (`bankId`) REFERENCES `question_banks` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for friends
@@ -89,7 +89,7 @@ CREATE TABLE `friends`  (
   INDEX `friendId`(`friendId` ASC) USING BTREE,
   CONSTRAINT `friends_ibfk_1` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT `friends_ibfk_2` FOREIGN KEY (`friendId`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for group_members
@@ -108,9 +108,9 @@ CREATE TABLE `group_members`  (
   UNIQUE INDEX `idx_group_user`(`group_id` ASC, `user_id` ASC) USING BTREE,
   UNIQUE INDEX `group_members_group_id_user_id`(`group_id` ASC, `user_id` ASC) USING BTREE,
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
-  CONSTRAINT `group_members_ibfk_83` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `group_members_ibfk_84` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
+  CONSTRAINT `group_members_ibfk_95` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `group_members_ibfk_96` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for group_message_read
@@ -127,10 +127,9 @@ CREATE TABLE `group_message_read`  (
   UNIQUE INDEX `group_message_read_group_id_user_id`(`group_id` ASC, `user_id` ASC) USING BTREE,
   INDEX `user_id`(`user_id` ASC) USING BTREE,
   INDEX `message_id`(`message_id` ASC) USING BTREE,
-  CONSTRAINT `group_message_read_ibfk_1` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `group_message_read_ibfk_54` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT `group_message_read_ibfk_55` FOREIGN KEY (`message_id`) REFERENCES `group_messages` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 41 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+  CONSTRAINT `group_message_read_ibfk_93` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `group_message_read_ibfk_94` FOREIGN KEY (`message_id`) REFERENCES `group_messages` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE = InnoDB AUTO_INCREMENT = 49 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for group_messages
@@ -151,9 +150,9 @@ CREATE TABLE `group_messages`  (
   INDEX `group_messages_group_id`(`group_id` ASC) USING BTREE,
   INDEX `group_messages_from_user_id`(`from_user_id` ASC) USING BTREE,
   INDEX `group_messages_create_time`(`create_time` ASC) USING BTREE,
-  CONSTRAINT `group_messages_ibfk_83` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `group_messages_ibfk_84` FOREIGN KEY (`from_user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
+  CONSTRAINT `group_messages_ibfk_95` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `group_messages_ibfk_96` FOREIGN KEY (`from_user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE = InnoDB AUTO_INCREMENT = 13 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for group_requests
@@ -172,9 +171,9 @@ CREATE TABLE `group_requests`  (
   INDEX `group_requests_group_id`(`group_id` ASC) USING BTREE,
   INDEX `group_requests_user_id`(`user_id` ASC) USING BTREE,
   INDEX `group_requests_status`(`status` ASC) USING BTREE,
-  CONSTRAINT `group_requests_ibfk_77` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `group_requests_ibfk_78` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+  CONSTRAINT `group_requests_ibfk_79` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `group_requests_ibfk_80` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE = InnoDB AUTO_INCREMENT = 17 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for groups
@@ -197,7 +196,6 @@ CREATE TABLE `groups`  (
   UNIQUE INDEX `group_number_2`(`group_number` ASC) USING BTREE,
   UNIQUE INDEX `group_number_3`(`group_number` ASC) USING BTREE,
   UNIQUE INDEX `group_number_4`(`group_number` ASC) USING BTREE,
-  INDEX `owner_id`(`owner_id` ASC) USING BTREE,
   UNIQUE INDEX `group_number_5`(`group_number` ASC) USING BTREE,
   UNIQUE INDEX `group_number_6`(`group_number` ASC) USING BTREE,
   UNIQUE INDEX `group_number_7`(`group_number` ASC) USING BTREE,
@@ -228,8 +226,23 @@ CREATE TABLE `groups`  (
   UNIQUE INDEX `group_number_32`(`group_number` ASC) USING BTREE,
   UNIQUE INDEX `group_number_33`(`group_number` ASC) USING BTREE,
   UNIQUE INDEX `group_number_34`(`group_number` ASC) USING BTREE,
+  UNIQUE INDEX `group_number_35`(`group_number` ASC) USING BTREE,
+  UNIQUE INDEX `group_number_36`(`group_number` ASC) USING BTREE,
+  UNIQUE INDEX `group_number_37`(`group_number` ASC) USING BTREE,
+  UNIQUE INDEX `group_number_38`(`group_number` ASC) USING BTREE,
+  UNIQUE INDEX `group_number_39`(`group_number` ASC) USING BTREE,
+  UNIQUE INDEX `group_number_40`(`group_number` ASC) USING BTREE,
+  UNIQUE INDEX `group_number_41`(`group_number` ASC) USING BTREE,
+  UNIQUE INDEX `group_number_42`(`group_number` ASC) USING BTREE,
+  UNIQUE INDEX `group_number_43`(`group_number` ASC) USING BTREE,
+  UNIQUE INDEX `group_number_44`(`group_number` ASC) USING BTREE,
+  UNIQUE INDEX `group_number_45`(`group_number` ASC) USING BTREE,
+  UNIQUE INDEX `group_number_46`(`group_number` ASC) USING BTREE,
+  UNIQUE INDEX `group_number_47`(`group_number` ASC) USING BTREE,
+  UNIQUE INDEX `group_number_48`(`group_number` ASC) USING BTREE,
+  INDEX `owner_id`(`owner_id` ASC) USING BTREE,
   CONSTRAINT `groups_ibfk_1` FOREIGN KEY (`owner_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for messages
@@ -257,15 +270,15 @@ CREATE TABLE `messages`  (
 DROP TABLE IF EXISTS `mistake_books`;
 CREATE TABLE `mistake_books`  (
   `id` int NOT NULL AUTO_INCREMENT,
-  `create_time` datetime NULL DEFAULT NULL,
-  `update_time` datetime NULL DEFAULT NULL,
   `userId` int NOT NULL,
   `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL,
+  `create_time` datetime NULL DEFAULT NULL,
+  `update_time` datetime NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE,
-  INDEX `userId`(`userId` ASC) USING BTREE,
+  INDEX `idx_userId`(`userId` ASC) USING BTREE,
   CONSTRAINT `mistake_books_ibfk_1` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for mistake_records
@@ -276,12 +289,13 @@ CREATE TABLE `mistake_records`  (
   `bookId` int NOT NULL,
   `questionId` int NOT NULL,
   `create_time` datetime NULL DEFAULT NULL,
+  `error_count` int NOT NULL DEFAULT 1 COMMENT '错误次数',
   PRIMARY KEY (`id`) USING BTREE,
-  INDEX `bookId`(`bookId` ASC) USING BTREE,
+  UNIQUE INDEX `uk_bookId_questionId`(`bookId` ASC, `questionId` ASC) USING BTREE,
   INDEX `questionId`(`questionId` ASC) USING BTREE,
-  CONSTRAINT `mistake_records_ibfk_77` FOREIGN KEY (`bookId`) REFERENCES `mistake_books` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `mistake_records_ibfk_78` FOREIGN KEY (`questionId`) REFERENCES `questions` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
+  CONSTRAINT `mistake_records_ibfk_105` FOREIGN KEY (`bookId`) REFERENCES `mistake_books` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `mistake_records_ibfk_106` FOREIGN KEY (`questionId`) REFERENCES `questions` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for question_banks
@@ -291,14 +305,15 @@ CREATE TABLE `question_banks`  (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '题库名称',
   `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '题库描述',
+  `userId` int NOT NULL,
+  `is_public` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否公开',
   `create_time` datetime NULL DEFAULT NULL COMMENT '创建时间',
   `update_time` datetime NULL DEFAULT NULL COMMENT '更新时间',
-  `userId` int NOT NULL COMMENT '创建者ID',
-  `is_public` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否公开',
   PRIMARY KEY (`id`) USING BTREE,
-  INDEX `userId`(`userId` ASC) USING BTREE,
+  INDEX `idx_userId`(`userId` ASC) USING BTREE,
+  INDEX `idx_is_public`(`is_public` ASC) USING BTREE,
   CONSTRAINT `question_banks_ibfk_1` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 10 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for questions
@@ -306,6 +321,7 @@ CREATE TABLE `question_banks`  (
 DROP TABLE IF EXISTS `questions`;
 CREATE TABLE `questions`  (
   `id` int NOT NULL AUTO_INCREMENT,
+  `bankId` int NOT NULL,
   `type` enum('single','multiple','judge','essay') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '题目类型：single-单选题，multiple-多选题，judge-判断题，essay-问答题',
   `content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '题目内容',
   `options` json NULL COMMENT '选项，格式：{A: \"选项内容\", B: \"选项内容\", ...}',
@@ -313,11 +329,11 @@ CREATE TABLE `questions`  (
   `analysis` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '题目解析',
   `create_time` datetime NULL DEFAULT NULL COMMENT '创建时间',
   `update_time` datetime NULL DEFAULT NULL COMMENT '更新时间',
-  `bankId` int NOT NULL COMMENT '所属题库ID',
   PRIMARY KEY (`id`) USING BTREE,
-  INDEX `bankId`(`bankId` ASC) USING BTREE,
+  INDEX `idx_bankId`(`bankId` ASC) USING BTREE,
+  INDEX `idx_type`(`type` ASC) USING BTREE,
   CONSTRAINT `questions_ibfk_1` FOREIGN KEY (`bankId`) REFERENCES `question_banks` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 457 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for users
@@ -334,6 +350,7 @@ CREATE TABLE `users`  (
   `create_time` datetime NULL DEFAULT NULL,
   `update_time` datetime NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `uk_username`(`username` ASC) USING BTREE,
   UNIQUE INDEX `username`(`username` ASC) USING BTREE,
   UNIQUE INDEX `username_2`(`username` ASC) USING BTREE,
   UNIQUE INDEX `username_3`(`username` ASC) USING BTREE,
@@ -380,7 +397,22 @@ CREATE TABLE `users`  (
   UNIQUE INDEX `username_44`(`username` ASC) USING BTREE,
   UNIQUE INDEX `username_45`(`username` ASC) USING BTREE,
   UNIQUE INDEX `username_46`(`username` ASC) USING BTREE,
-  UNIQUE INDEX `username_47`(`username` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
+  UNIQUE INDEX `username_47`(`username` ASC) USING BTREE,
+  UNIQUE INDEX `username_48`(`username` ASC) USING BTREE,
+  UNIQUE INDEX `username_49`(`username` ASC) USING BTREE,
+  UNIQUE INDEX `username_50`(`username` ASC) USING BTREE,
+  UNIQUE INDEX `username_51`(`username` ASC) USING BTREE,
+  UNIQUE INDEX `username_52`(`username` ASC) USING BTREE,
+  UNIQUE INDEX `username_53`(`username` ASC) USING BTREE,
+  UNIQUE INDEX `username_54`(`username` ASC) USING BTREE,
+  UNIQUE INDEX `username_55`(`username` ASC) USING BTREE,
+  UNIQUE INDEX `username_56`(`username` ASC) USING BTREE,
+  UNIQUE INDEX `username_57`(`username` ASC) USING BTREE,
+  UNIQUE INDEX `username_58`(`username` ASC) USING BTREE,
+  UNIQUE INDEX `username_59`(`username` ASC) USING BTREE,
+  UNIQUE INDEX `username_60`(`username` ASC) USING BTREE,
+  INDEX `idx_role`(`role` ASC) USING BTREE,
+  INDEX `idx_create_time`(`create_time` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 SET FOREIGN_KEY_CHECKS = 1;

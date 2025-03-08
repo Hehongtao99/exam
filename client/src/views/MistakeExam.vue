@@ -317,15 +317,14 @@ const formatAnswer = (answer, options, type) => {
 
 const fetchQuestions = async () => {
   try {
-    const response = await axios.get(`/api/exams/mistake-book/${route.params.bookId}/questions`);
+    const bookId = route.params.bookId;
+    const response = await axios.get(`/api/exams/mistake-book/${bookId}/questions`);
     if (response.data.success) {
-      questions.value = response.data.data.map(question => ({
-        ...question,
-        options: parseOptions(question.options)
-      }));
-      answers.value = new Array(questions.value.length);
+      questions.value = response.data.data.questions;
+      answers.value = new Array(questions.value.length).fill('');
     }
   } catch (error) {
+    console.error('获取错题失败:', error);
     message.error('获取错题失败');
     router.push('/dashboard/mistake-books');
   }

@@ -30,7 +30,9 @@ const sequelize = new Sequelize('exam', 'root', 'hht500234', {
     timestamps: false, // 全局禁用时间戳
     freezeTableName: true, // 禁止表名复数化
     charset: 'utf8mb4',
-    collate: 'utf8mb4_general_ci'
+    collate: 'utf8mb4_general_ci',
+    // 禁用外键约束
+    constraints: false
   },
   timezone: '+08:00', // 设置时区为北京时间
   logging: false // 关闭SQL日志
@@ -56,8 +58,8 @@ const initDB = async () => {
     // 导入所有模型
     require('../models');
 
-    // 同步数据库表结构
-    await sequelize.sync({ alter: true });
+    // 同步数据库表结构，但不强制更新
+    await sequelize.sync({ alter: false });
     console.log('数据库表结构同步成功');
   } catch (error) {
     console.error('数据库初始化失败:', error);

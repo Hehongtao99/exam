@@ -75,7 +75,7 @@ router.get('/recent-exams', async (req, res) => {
       where: { userId: parseInt(userId) },
       include: [{
         model: QuestionBank,
-        as: 'questionBank',
+        as: 'examBank',
         attributes: ['name']
       }],
       order: [['create_time', 'DESC']],
@@ -113,7 +113,7 @@ router.get('/mistake-stats', async (req, res) => {
         as: 'mistakeRecords',
         include: [{
           model: Question,
-          as: 'mistakeQuestion',
+          as: 'question',
           attributes: ['type']
         }]
       }]
@@ -129,8 +129,8 @@ router.get('/mistake-stats', async (req, res) => {
 
     mistakes.forEach(book => {
       book.mistakeRecords?.forEach(record => {
-        if (record.mistakeQuestion?.type) {
-          stats[record.mistakeQuestion.type]++;
+        if (record.question?.type) {
+          stats[record.question.type]++;
         }
       });
     });

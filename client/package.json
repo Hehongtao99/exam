@@ -24,6 +24,7 @@
     "@vitejs/plugin-vue": "^5.2.1",
     "@vitejs/plugin-vue-jsx": "^4.1.1",
     "path": "^0.12.7",
+    "sass": "^1.85.1",
     "vite": "^6.1.0"
   }
 }
